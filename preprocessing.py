@@ -1,10 +1,10 @@
+import os
 import numpy as np
 import torchaudio
+from torch import tensor
+import matplotlib.pyplot as plt
 
-
-def split_in_batches():
-
-def trim(data: np.array, start_threshold: float = 0.9, end_threshold: float = 0.9, offset: int = 50) -> (int, int):
+def trim(data: tensor, start_threshold: float = 0.9, end_threshold: float = 0.9, offset: int = 50) -> (int, int):
     assert data.shape[0] == 2, "Expected shape of audio data to be of form (2, n)."
 
     start = 0
@@ -23,29 +23,33 @@ def trim(data: np.array, start_threshold: float = 0.9, end_threshold: float = 0.
     return start + offset, end - offset
 
 
-def trim_audio_files(infile_x, inflie_y):
-    infile_x = 'Data/train_x_clip.wav'
-    infile_y = 'Data/train_y_clip.wav'
-    data_x, sr_x = torchaudio.load(infile_x)
-    data_y, sr_y = torchaudio.load(infile_y)
+def trim_audio_data(x_data, y_data, clip_offset=50):
+    print("Original shape of X", x_data.shape)
+    print("Original shape of Y", y_data.shape)
 
-    assert sr_x == sr_y, "Expected audio data to be eqaul in sample rate."
+    start_x, end_x = trim(x_data, offset=clip_offset)
+    start_y, end_y = trim(y_data, offset=clip_offset)
+    x_trim = x_data[:, start_x:end_x]
+    y_trim = y_data[:, start_y:end_y]
 
-    sample_rate = sr_x
-    clip_offset = 50
+    print("Trimmed shape of X", x_trim.shape)
+    print("Trimmed shape of Y", y_trim.shape)
 
-    print("Original shape of X", data_x.shape)
-    print("Original shape of Y", data_y.shape)
+    return x_trim
 
-    start_x, end_x = trim(data_x, offset=clip_offset)
-    start_y, end_y = trim(data_y, offset=clip_offset)
-    x = data_x[:, start_x:end_x]
-    y = data_y[:, start_y:end_y]
 
-    print("Trimmed shape of X", x.shape)
-    print("Trimmed shape of Y", y.shape)
+x_file = os.path.join("Data", "x_rand_train_18000.wav")
+y_file = os.path.join("Data", "y_rand_train_18000.wav")
 
-    assert x.shape == y.shape, "Expected audio data to be eqaul in shape after trimming."
+x_data, sr_x = torchaudio.load(x_file, normalization=True)
+y_data, sr_y = torchaudio.load(y_file, normalization=True)
 
-    torchaudio.save("Data/trimmed_x.wav", x, sr_x)
-    torchaudio.save("Data/trimmed_y.wav", y, sr_y)
+assert sr_x == sr_y, "Expected sample rates of wav-files to be equal."
+
+#x_trim, y_trim = trim_audio_data(x_data, y_data, 50)
+x_trim = x_data[:, 50:-50]
+y_trim = y_data[:, 339566:90339566]
+assert x_trim.shape == y_trim.shape, "Expected audio data to be eqaul in shape after trimming."
+
+torchaudio.save("Preprocessed/trimmed_x.wav", x_trim, sr_x)
+torchaudio.save("Preprocessed/trimmed_y.wav", y_trim, sr_y)
