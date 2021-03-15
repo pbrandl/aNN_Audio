@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Peter's Ignores
+Ableton/
+Data/
+Song_Collection/
+
