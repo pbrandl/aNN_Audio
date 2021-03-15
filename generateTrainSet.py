@@ -3,28 +3,41 @@ import glob
 import random
 import torch
 import torchaudio
+from scipy import signal
 
-dir = r'Data_Collection'
-sample_size = 18000
-sample_num = 5000
 
-train_files = glob.glob(os.path.join(dir, '*'))
+def dataset_generator(files, n_slice, slice_size, x_fade=0, channels=1):
+    """
+        This function randomly cuts slices from a song collections. Slices are concatenated
+        and returned as a long tensor of audio slices. Slices are faded to avoid click-noise.
+        A short and loud clip is added to the start and end of the final tensor. This ensures
+        that the input and target data can be synchronized after recording.
+    """
 
-x = torch.zeros(2, sample_size * sample_num)
+    # Allocate Torch Tensor
+    x = torch.zeros(channels, slice_size * n_slice + x_fade)
 
-for i in range(sample_num):
-    print("Sampling {:04.2f}".format(i/sample_num))
-    wav_file = random.choice(train_files)
-    tmp_x, _ = torchaudio.load(wav_file, normalization=False)
-    len_x = tmp_x.shape[1]
-    j = random.randint(0, len_x - sample_size)
-    x[:, i * sample_size:(i + 1) * sample_size] = tmp_x[:, j:j + sample_size]
+    # Initialise Tukey-like Window
+    win_size = slice_size + x_fade // 2
+    alpha = 0 if x_fade == 0 else x_fade / win_size
+    tukey_win = torch.tensor(signal.tukey(win_size, alpha, sym=False))
 
-clip, sr = torchaudio.load(os.path.join("Data", "clip.wav"), normalization=False)
+    print('Tukey window satisfies COLA:', signal.check_COLA(tukey_win, win_size, x_fade // 2))
 
-print("Clip shape", clip.shape)
-print("Data shape", x.shape)
-x = torch.cat((clip, x, clip), dim=1)
-print("ClipData shape", x.shape)
+    # Add a Random Slice of a Random Song to Train Data x
+    for i, wav_file in enumerate(random.choices(files, k=n_slice), 0):
+        if i % 200 == 0:
+            print("Generation Process: {:05.2f}%".format(i / n_slice * 100))
+        x_tmp, _ = torchaudio.load(wav_file, normalization=True)
+        j = random.randint(0, x_tmp.shape[1] - win_size)
+        x[:, i * slice_size:(i + 1) * slice_size + x_fade // 2] += x_tmp[:, j:j + win_size] * tukey_win
 
-torchaudio.save("Data/rand_train_%i.wav" % sample_size, x, sr)
+    clip, sr = torchaudio.load(os.path.join("Data", "clip_101.aif"), normalization=True)
+    x = torch.cat((clip[0:channels, :], x, clip[0:channels, :]), dim=1)
+
+    return x
+
+
+files = glob.glob(os.path.join('Data_Collection', '*.wav'))
+x_train = dataset_generator(files=files, n_slice=10000, slice_size=18000, x_fade=3000, channels=2)
+torchaudio.save("Data/x_10_18_.wav", x_train, 44100)
