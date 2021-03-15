@@ -138,3 +138,5 @@ class WaveNet(nn.Module):
         assert x_seq.shape == y_seq.shape, "Expected input and output to be equal in shape."
         return y_seq.reshape(channels, x_seq_length)
 
+
+    
