@@ -1,95 +1,140 @@
-import torch
-import numpy as np
-from torch import nn
-from torch.utils.data import TensorDataset, DataLoader
+class GatedConv1d(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0,
+                 dilation=1, groups=1, bias=True):
+        super(GatedConv1d, self).__init__()
+        self.dilation = dilation
+        self.conv_f = nn.Conv1d(in_channels, out_channels, kernel_size,
+                                stride=stride, padding=padding, dilation=dilation,
+                                groups=groups, bias=bias)
+        self.conv_g = nn.Conv1d(in_channels, out_channels, kernel_size,
+                                stride=stride, padding=padding, dilation=dilation,
+                                groups=groups, bias=bias)
+        self.sig = nn.Sigmoid()
+        self.tanh = nn.Hardtanh()
+
+    def forward(self, x):
+        x = nn.functional.pad(x, (self.dilation, 0))
+        f = self.conv_f(x)
+        return torch.mul(self.conv_f(x), self.tanh(self.conv_g(x)))
 
 
-class CausalConv1d(torch.nn.Conv1d):
-    def __init__(self, in_channels, out_channels, kernel_size, stride=1, dilation=1, groups=1, bias=True):
-        self.__padding = (kernel_size - 1) * dilation
-        super().__init__(in_channels, out_channels, kernel_size=kernel_size, stride=stride,
-                         padding=self.__padding, dilation=dilation, groups=groups, bias=bias)
+class GatedResidualBlock(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0,
+                 dilation=1, groups=1, bias=True):
+        super(GatedResidualBlock, self).__init__()
+        self.gatedconv = GatedConv1d(in_channels, out_channels, kernel_size,
+                                     stride=stride, padding=padding,
+                                     dilation=dilation, groups=groups, bias=bias)
+        self.conv_1 = nn.Conv1d(out_channels, out_channels, 1, stride=1, padding=0,
+                                dilation=1, groups=1, bias=bias)
 
-    def forward(self, input):
-        result = super().forward(input)
-        if self.__padding != 0:
-            return result[:, :, :-self.__padding]
-        return result
+    def forward(self, x):
+        skip = self.conv_1(self.gatedconv(x))
+        residual = torch.add(skip, x)
+        return residual, skip
 
-
-def _conv_stack(dilations, in_chann, out_chann, kernel_size) -> [CausalConv1d]:
-    """
-    Create stack of dilated convolutional layers, outlined in WaveNet paper:
-    https://arxiv.org/pdf/1609.03499.pdf
-    """
-    return nn.ModuleList([CausalConv1d(in_chann, out_chann, dilation=d, kernel_size=kernel_size) for d in dilations])
 
 
 class WaveNet(nn.Module):
-    def __init__(self, num_channels, dilation_depth, num_repeat, kernel_size=2):
-        super().__init__()
-        self.receptive_field = (kernel_size - 1) * (np.sum([2 ** d for d in range(dilation_depth)]))
-        print("Receptive field:", self.receptive_field)
-        self.previous = None
+    def __init__(self, num_time_samples, num_channels=1, num_blocks=2, max_dilation=14,
+                 num_hidden=32, kernel_size=2, device='cuda'):
+        super(WaveNet, self).__init__()
+        
+        self.input_length = 0
+        self.num_time_samples = num_time_samples
+        self.num_channels = num_channels
+        self.num_blocks = num_blocks
+        self.max_dilation = max_dilation
+        self.num_hidden = num_hidden
+        self.kernel_size = kernel_size
+        self.device = device
 
-        dilations = [2 ** d for d in range(dilation_depth)] * num_repeat
-        print("dilations", dilations)
-        out_channels = int(num_channels * 2)
+        self.length_rf = (kernel_size - 1) * num_blocks * (1+ sum([2 ** k for k in range(max_dilation)]))
+        self.previous_rf = None # Initial Receptive Field
+        self.x_shape = None # Remember the input shape
 
-        self.hidden = _conv_stack(dilations, num_channels, out_channels, kernel_size)
-        self.residuals = _conv_stack(dilations, num_channels, num_channels, 1)
+        stacked_dilation = []
 
-        self.input_layer = CausalConv1d(in_channels=1, out_channels=num_channels, kernel_size=1)
+        first = True
+        for b in range(num_blocks):
+            for i in range(max_dilation):
+                rate = 2 ** i
+                if first:
+                    hidden = GatedResidualBlock(num_channels, num_hidden, kernel_size, dilation=rate)
+                    first = False
+                else:
+                    hidden = GatedResidualBlock(num_hidden, num_hidden, kernel_size, dilation=rate)
+                    
+                hidden.name = 'b{}-l{}'.format(b, i)
+                stacked_dilation.append(hidden)
+                #stacked_dilation.append(nn.Tanh())
+                #batch_norms.append(nn.BatchNorm1d(num_hidden))
 
-        self.dropout = nn.Dropout(p=0.1)
+        self.stacked_dilation = nn.ModuleList(stacked_dilation)
+        
+        self.tanh = nn.Tanh()
 
         self.linear_mix = nn.Conv1d(
-            in_channels=num_channels * dilation_depth * num_repeat,
+            in_channels=num_hidden,
             out_channels=1,
             kernel_size=1,
         )
 
-        self.post_conv1d = nn.Conv1d(in_channels=1, out_channels=1, kernel_size=1)
+        self.to(device)
 
-        self.num_channels = num_channels
+    @property
+    def n_param(self):
+        return sum(p.numel() for p in self.parameters() if p.requires_grad)
+
+    def reset_previous_rf(self):
+        self.previous_rf = None
 
     def forward(self, x):
-        if self.previous is None:
-            self.previous = torch.zeros(x.shape[0], x.shape[1], self.receptive_field)
+        self.x_shape = x.shape
 
-        x = torch.cat((self.previous, x), dim=2)
-        self.previous = x[:, :, -self.receptive_field:]
+        if self.previous_rf is None:
+            self.previous_rf = torch.zeros((x.shape[0], x.shape[1], self.length_rf)).to(device)
 
-        out = x
+        # Concat the last receptive field from x_(i-1) to x_i
+        x_tended = torch.cat((self.previous_rf, x), dim=2)
+        self.previous_rf = x[:, :, -self.length_rf:]
+        
         skips = []
-        out = self.input_layer(out)
-        # print(x)
-        # print(out)
-        # print("shape input lay", out.shape)
-        for hidden, residual in zip(self.hidden, self.residuals):
-            x = out
-            out_hidden = hidden(x)
+        for layer in self.stacked_dilation:
+            x_tended, skip = layer(x_tended)
+            skips.append(skip)
+        
+        x_tended = reduce(torch.add, skips)
 
-            # print("shape hidden lay", out_hidden.shape)
+        return self.linear_mix(x_tended)[:, :, self.length_rf:] + x
 
-            # Gated Activation
-            #   split (32,16,3) into two (16,16,3) for tanh and sigm calculations
-            out_hidden_split = torch.split(out_hidden, self.num_channels, dim=1)
-            out = torch.tanh(out_hidden_split[0]) * torch.sigmoid(out_hidden_split[1])
-            # print("gated act", out.shape)
+    def predict_sequence(self, x_seq):
+        assert x_seq.dim() == 2, "Expected two-dimensional input shape (channels, lengths)."
+        
+        # Initialize 
+        self.reset_previous_rf()
+        x_length = self.x_shape[-1]
+        x_seq_length = x_seq.shape[-1]
+        channels = x_seq.shape[0]
+        x_seq = x_seq.reshape(1, channels, x_seq_length)
 
-            skips.append(out)
+        # Pad the input, s.t. it fits to the model's input expections
+        pad_size = x_length - x_seq_length % x_length
+        x_seq_padded = F.pad(x_seq, (pad_size, 0), mode='constant', value=0)
+        x_seq_padded_length = x_seq_padded.shape[-1]
+        y_seq_padded = torch.zeros_like(x_seq_padded)
 
-            out = residual(out)
-            # print("residual", out.shape, out.size(2))
-            out = out + x
-            # print("layer final", out.shape)
+        for i in range(0, x_seq_length, x_length):
+            x_slice_c0 = x_seq_padded[:, 0, i:i+x_length].unsqueeze(0)
+            y_seq_padded[:, 0, i:i+x_length] = model(x_slice_c0)
 
-        # Modified "postprocess" step:
-        out = torch.cat([s[:, :, :] for s in skips], dim=1)
-        # print(out.shape)
-        out = self.linear_mix(out)
-        # print("post", out.shape)
-        out = out[:, :, self.receptive_field:]
+            if channels == 2:
+                x_slice_c1 = x_seq_padded[:, 1, i:i+x_length].unsqueeze(0)
+                y_seq_padded[:, 1, i:i+x_length] = model(x_slice_c1)
+            #print(y_seq_padded.shape)
 
-        return out
+        y_seq = y_seq_padded[:, :, pad_size:]
+
+        assert x_seq.shape == y_seq.shape, "Expected input and output to be equal in shape."
+        return y_seq.reshape(channels, x_seq_length)
+
