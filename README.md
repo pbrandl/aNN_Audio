@@ -4,3 +4,5 @@ Modelling a digital twin of an analog distortion device for audio signals. Essen
 
 The data used for training is randomly cut and concatenated from a MedleyDB -- a dataset of multitrack audio for music research. The obtained audio concatenation was then recorded by an analog harmonic distortion device, i.e., the input X is considered a raw audio file and differs from the target Y only by the distortion effect.
 
+# Reference
+- R. Bittner, J. Salamon, M. Tierney, M. Mauch, C. Cannam and J. P. Bello, "MedleyDB: A Multitrack Dataset for Annotation-Intensive MIR Research", in 15th International Society for Music Information Retrieval Conference, Taipei, Taiwan, Oct. 2014.
