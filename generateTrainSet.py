@@ -41,3 +41,4 @@ def dataset_generator(files, n_slice, slice_size, x_fade=0, channels=1):
 files = glob.glob(os.path.join('Song_Collection', '*.wav'))
 x_train = dataset_generator(files=files, n_slice=100000, slice_size=4096+6000, x_fade=3000, channels=2)
 torchaudio.save("Data/210317_Dataset.wav", x_train, 44100)
+
