@@ -4,22 +4,22 @@ import torchaudio
 from torch import tensor
 
 
-def arg_threshold(data: tensor, start_threshold: float = 0.4, end_threshold: float = 0.4, offset: int = 50) -> (int, int):
+def arg_threshold(data: tensor, threshold: float = 0.8, offset: int = 50) -> (int, int):
     """
         This function returns the first and last indices of a 2D tensor that exceed a threshold.
     """
 
-    assert data.shape[0] == 2, "Expected shape of audio data to be of form (2, n)."
+    assert 0 < data.shape[0] <= 2, "Expected mono/stereo audio data to be of form (channels, smaples)."
 
     start = 0
     end = len(data)
     for start, d in enumerate(data[0]):
-        if abs(d) > start_threshold:
+        if abs(d) > threshold:
             print("Starts at: %i with volume %d." % (start, float(d)))
             break
 
     for i, d in enumerate(np.flipud(data[0])):
-        if abs(d) > end_threshold:
+        if abs(d) > threshold:
             end = len(data[0]) - i
             print("Ends at: %i with volume %d." % (end, float(d)))
             break
@@ -46,16 +46,23 @@ def trim_audio_data(x_data, y_data, clip_offset=50):
 
 
 # Load input x-file and target y-file
-x_file = os.path.join("..", "Data", "x_clip.wav")
-y_file = os.path.join("..", "Data", "y_clip.wav")
+x_file = os.path.join("Data", "210317_Dataset_mono_x.wav")
+y_file = os.path.join("Data", "210317_Dataset_mono_y.wav")
 x_data, sr_x = torchaudio.load(x_file, normalization=True)
 y_data, sr_y = torchaudio.load(y_file, normalization=True)
-
+print(x_data.shape, y_data.shape)
 assert sr_x == sr_y, "Expected sample rates of wav-files to be equal."
+assert x_data.shape[1] <= y_data.shape[1], "x must be less-equal than y in order to trim."
 
 x_trim, y_trim = trim_audio_data(x_data, y_data, clip_offset=51)
 
+# !!Note: If difference is only 1 sample: The issue may be that the y dataset is too low in volume.!!
 assert x_trim.shape == y_trim.shape, "Expected audio data to be eqaul in shape after trimming."
 
-torchaudio.save("../Data/Preprocessed/trimmed_x_RN_silk.wav", x_trim, sr_x)
-torchaudio.save("../Data/Preprocessed/trimmed_y_RN_silk.wav", y_trim, sr_y)
+# Save preprocessed x- and y-files
+x_file = os.path.join("Data", "Preprocessed", "210421_Dataset_mono_trim_x.wav")
+y_file = os.path.join("Data", "Preprocessed", "210421_Dataset_mono_trim_y.wav")
+torchaudio.save(x_file, x_trim, sr_x)
+torchaudio.save(y_file, y_trim, sr_y)
+
+

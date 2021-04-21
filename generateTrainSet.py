@@ -17,7 +17,7 @@ def dataset_generator(files, n_slice, slice_size, x_fade=0, channels=1):
     # Allocate Torch Tensor
     x = torch.zeros(channels, slice_size * n_slice + x_fade)
 
-    # Initialise Tukey-like Window
+    # Initialise Tukey Window
     win_size = slice_size + x_fade // 2
     alpha = 0 if x_fade == 0 else x_fade / win_size
     tukey_win = torch.tensor(signal.tukey(win_size, alpha, sym=False))
@@ -38,6 +38,6 @@ def dataset_generator(files, n_slice, slice_size, x_fade=0, channels=1):
     return x
 
 
-files = glob.glob(os.path.join('Data_Collection', '*.wav'))
-x_train = dataset_generator(files=files, n_slice=10000, slice_size=18000, x_fade=3000, channels=2)
-torchaudio.save("Data/x_10_18_.wav", x_train, 44100)
+files = glob.glob(os.path.join('Song_Collection', '*.wav'))
+x_train = dataset_generator(files=files, n_slice=100000, slice_size=4096+6000, x_fade=3000, channels=2)
+torchaudio.save("Data/210317_Dataset.wav", x_train, 44100)
