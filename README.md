@@ -20,7 +20,7 @@ Note that the input and target files are starting and ending with a loud click s
 
 ## Training the Model
 
-The model is implemented in a Python notebook in Google Colab (`WaveNet.ipynb`). Input and target files have to be uploaded to Google Drive. Once loaded as tensors in the notebook, the fit function in the notebook can be called and training starts.
+The model is implemented in a Python notebook in Google Colab (`WaveNet.ipynb`). Input and target files have to be uploaded to Google Drive. Once loaded as tensors of shape (channels, num_samples) in the notebook, the fit function in the notebook can be called and training starts.
 
 
 
