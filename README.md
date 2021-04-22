@@ -2,9 +2,8 @@
 
 Modelling a digital twin of an analog distortion device for audio signals. Essentially, the device adds overtones to the signal. The current implementation uses a modified version of WaveNet.
 
-<div style="text-align:center">
-  <img src="https://github.com/pbrandl/aNN_Audio/blob/master/images/concept.png?raw=true" width="50%" height="50%" alt="Conceptual Digital Twin">
-</div>
+<img src="https://github.com/pbrandl/aNN_Audio/blob/master/images/concept.png?raw=true" width="50%" height="50%" alt="Conceptual Digital Twin" align="center">
+
 
 ## Training Data Generation
 
