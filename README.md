@@ -1,6 +1,6 @@
 # aNN_Audio
 
-Modelling a digital twin of an analog distortion device for audio signals as shown in the image below. <img src="https://render.githubusercontent.com/render/math?math=$x, y$"> are audio signals, i.e. 16-bit wav files.
+Modelling a digital twin of an analog distortion device for audio signals as shown in the image below. <img src="https://render.githubusercontent.com/render/math?math=x, y"> are audio signals, i.e. 16-bit wav files.
 Essentially, the device adds overtones to the signal. The current implementation uses a modified version of WaveNet.
 
 <p align="center">
