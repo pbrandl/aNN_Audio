@@ -7,11 +7,13 @@ Essentially, the device adds overtones to the signal. The current implementation
   <img src="https://github.com/pbrandl/aNN_Audio/blob/master/images/concept.png?raw=true" width="50%" height="50%" alt="Conceptual Digital Twin" align="center">
 </p>
 
-## Training Data Generation
-
-Training data is generated in `generateTrainSet.py`. The data used for training is randomly cut and concatenated from MedleyDB -- a dataset of multitrack audio for music research [1]. The obtained audio concatenation was then recorded by an analog harmonic distortion device, i.e., the input <img src="https://render.githubusercontent.com/render/math?math=$x$"> is considered a raw audio file and differs from the target <img src="https://render.githubusercontent.com/render/math?math=y"> only by the distortion effect.
 
 Due to computational complexity of the project is mostly implemented in Google Colab. Due to the large training data set (currently 4 GB) the data is stored in Google Drive. 
+
+## Training Data Generation
+
+Training data is generated in `generateTrainSet.py`. The data used for training is randomly cut and concatenated from MedleyDB -- a dataset of multitrack audio for music research [1]. The obtained audio concatenation was then recorded through an analog harmonic distortion device, i.e., the input <img src="https://render.githubusercontent.com/render/math?math=x"> is considered a wav audio file and differs from the target file <img src="https://render.githubusercontent.com/render/math?math=y"> only by the distortion effect. (Note that the files are starting and ending with a loud click sound.
+This helps for synchronization of the files after recording. This is done in `preprocessing.py`.
 
 
 ## Predicting an Audio Sequence
