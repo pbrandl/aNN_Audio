@@ -10,10 +10,18 @@ Essentially, the device adds overtones to the signal. The current implementation
 
 Due to computational complexity of the project is mostly implemented in as Python notebook in Google Colab (`WaveNet.ipynb`). Due to the large training data set (currently 4 GB) the data is stored in Google Drive. 
 
-## Training Data Generation and Preprocessing
+## Training Data Generation
 
-Training data is generated in `generateTrainSet.py`. The data used for training is randomly cut and concatenated from MedleyDB -- a dataset of multitrack audio for music research [1]. The obtained audio concatenation was then recorded through an analog harmonic distortion device, i.e., the input <img src="https://render.githubusercontent.com/render/math?math=x"> is considered a wav audio file and differs from the target file <img src="https://render.githubusercontent.com/render/math?math=y"> only by the distortion effect. (Note that the files are starting and ending with a loud click sound.
-This helps for synchronization of the files after recording. This is done in `preprocessing.py`.
+Training data <img src="https://render.githubusercontent.com/render/math?math=x"> is generated in `generateTrainSet.py` as a 16-bit wav. The data used for training is randomly cut and concatenated from MedleyDB -- a dataset of multitrack audio for music research [1]. The obtained audio concatenation was then recorded through an analog harmonic distortion device to obtain the target file <img src="https://render.githubusercontent.com/render/math?math=y"> for training. Note, the input <img src="https://render.githubusercontent.com/render/math?math=x"> differs from the target file <img src="https://render.githubusercontent.com/render/math?math=y"> only by the distortion effect from the device. 
+
+## Preprocessing
+
+Note that the input and target files are starting and ending with a loud click sound. This helps for synchronization of the files after recording (recording may start or end with arbitrary offset before or after the actual audio signal). To synchronize the two files are trimmed according to the loud click sound. This results in equal length of both files. This is done in `preprocessing.py`.
+
+## Training the Model
+
+The model is implemented in a Python notebook in Google Colab (`WaveNet.ipynb`). Input and target files have to be uploaded to Google Drive. Once loaded as tensors the fit function in the notebook can be called and training starts.
+
 
 
 <!---## Predicting an Audio Sequence --->
