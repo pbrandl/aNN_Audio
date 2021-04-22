@@ -1,6 +1,6 @@
 # aNN_Audio
 
-Modelling a digital twin of an analog distortion device for audio signals as shown in the image below. <img src="https://render.githubusercontent.com/render/math?math=x, y"> are audio signals, i.e., 16-bit wav files. Based on these files the neural network is trained to minimize prediction errors.
+Modelling a digital twin of an analog harmonic distortion device for audio signals as shown in the image below. <img src="https://render.githubusercontent.com/render/math?math=x, y"> are audio signals, i.e., 16-bit wav files. Based on these files the neural network is trained to minimize prediction errors.
 Essentially, the device adds overtones to the signal. The current implementation uses a modified version of WaveNet [1].
 
 <p align="center">
@@ -18,9 +18,9 @@ Training data <img src="https://render.githubusercontent.com/render/math?math=x"
 
 Note that the input and target files are starting and ending with a loud click sound. This helps for synchronization of the files after recording (recording may start or end with arbitrary offset before or after the actual audio signal). To synchronize the two files are trimmed according to the loud click sound. This results in equal length of both files. This is done in `preprocessing.py`.
 
-## Training the Model
+## Training the Modela and Model Predictions
 
-The model is implemented in a Python notebook in Google Colab (`WaveNet.ipynb`). Input and target files have to be uploaded to Google Drive. Once loaded as tensors of shape (channels, num_samples) in the notebook, the fit function in the notebook can be called and training starts.
+The model is implemented in a Python notebook in Google Colab (`WaveNet.ipynb`). Input and target files have to be uploaded to Google Drive. Once loaded as tensors of shape (channels, num_samples) in the notebook, the fit function in the notebook can be called and training starts. Once trained, a `predict_sequence` function is implemented, that takes an arbitrary length of audio file as tensor and predicts the harmonic distortion.
 
 
 
