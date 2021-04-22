@@ -1,7 +1,7 @@
 # aNN_Audio
 
 Modelling a digital twin of an analog distortion device for audio signals as shown in the image below. <img src="https://render.githubusercontent.com/render/math?math=x, y"> are audio signals, i.e., 16-bit wav files.
-Essentially, the device adds overtones to the signal. The current implementation uses a modified version of WaveNet.
+Essentially, the device adds overtones to the signal. The current implementation uses a modified version of WaveNet [2].
 
 <p align="center">
   <img src="https://github.com/pbrandl/aNN_Audio/blob/master/images/concept.png?raw=true" width="50%" height="50%" alt="Conceptual Digital Twin" align="center">
@@ -9,7 +9,7 @@ Essentially, the device adds overtones to the signal. The current implementation
 
 ## Training Data Generation
 
-Training data is generated in `generateTrainSet.py`. The data used for training is randomly cut and concatenated from MedleyDB -- a dataset of multitrack audio for music research. The obtained audio concatenation was then recorded by an analog harmonic distortion device, i.e., the input <img src="https://render.githubusercontent.com/render/math?math=$x$"> is considered a raw audio file and differs from the target <img src="https://render.githubusercontent.com/render/math?math=y"> only by the distortion effect.
+Training data is generated in `generateTrainSet.py`. The data used for training is randomly cut and concatenated from MedleyDB -- a dataset of multitrack audio for music research [1]. The obtained audio concatenation was then recorded by an analog harmonic distortion device, i.e., the input <img src="https://render.githubusercontent.com/render/math?math=$x$"> is considered a raw audio file and differs from the target <img src="https://render.githubusercontent.com/render/math?math=y"> only by the distortion effect.
 
 Due to computational complexity of the project is mostly implemented in Google Colab. Due to the large training data set (currently 4 GB) the data is stored in Google Drive. 
 
