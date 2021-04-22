@@ -10,7 +10,7 @@ Modelling a digital twin of an analog distortion device for audio signals as sho
 
 Training data is generated in `generateTrainSet.py`. The data used for training is randomly cut and concatenated from MedleyDB -- a dataset of multitrack audio for music research. The obtained audio concatenation was then recorded by an analog harmonic distortion device, i.e., the input <img src="https://render.githubusercontent.com/render/math?math=$x$"> is considered a raw audio file and differs from the target <img src="https://render.githubusercontent.com/render/math?math=y"> only by the distortion effect.
 
-Due to computational complexity of the project is mostly implemented in Google Colab. Due to the large training data set (currently 4 GB) I am using Google Drive as storage. 
+Due to computational complexity of the project is mostly implemented in Google Colab. Due to the large training data set (currently 4 GB) the data is stored in Google Drive. 
 
 
 ## Predicting an Audio Sequence
