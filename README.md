@@ -18,7 +18,7 @@ Training data <img src="https://render.githubusercontent.com/render/math?math=x"
 
 Note that the input and target files are starting and ending with a loud click sound. This helps for synchronization of the files after recording (recording may start or end with arbitrary offset before or after the actual audio signal). To synchronize the two files are trimmed according to the loud click sound. This results in equal length of both files. This is done in `preprocessing.py`.
 
-## Training the Modela and Model Predictions
+## Training the Model and Model Predictions
 
 The model is implemented in a Python notebook in Google Colab (`WaveNet.ipynb`). Input and target files have to be uploaded to Google Drive. Once loaded as tensors of shape (channels, num_samples) in the notebook, the fit function in the notebook can be called and training starts. Once trained, a `predict_sequence` function is implemented, that takes an arbitrary length of audio file as tensor and predicts the harmonic distortion.
 
