@@ -8,7 +8,7 @@ Essentially, the device adds overtones to the signal. The current implementation
 </p>
 
 
-Due to computational complexity of the project is mostly implemented in as Python notebook in Google Colab (`WaveNet.ipynb`). Due to the large training data set (currently 4 GB) the data is stored in Google Drive. 
+Due to computational complexity of the project is mostly implemented in as Python notebook in Google Colab (`WaveNet.ipynb`). Due to the large training data set (currently 4 GB) the data is stored in Google Drive. (If interested just contact me.)
 
 ## Training Data Generation
 
