@@ -12,16 +12,16 @@ def arg_threshold(data: tensor, threshold: float = 0.8, offset: int = 50) -> (in
     assert 0 < data.shape[0] <= 2, "Expected mono/stereo audio data to be of form (channels, smaples)."
 
     start = 0
-    end = len(data)
+    end = data.shape[1]
     for start, d in enumerate(data[0]):
         if abs(d) > threshold:
-            print("Starts at: %i with volume %d." % (start, float(d)))
+            print("Starts at: %i with volume %.2f." % (start, float(d)))
             break
 
     for i, d in enumerate(np.flipud(data[0])):
         if abs(d) > threshold:
             end = len(data[0]) - i
-            print("Ends at: %i with volume %d." % (end, float(d)))
+            print("Ends at: %i with volume %.2f." % (end, float(d)))
             break
 
     return start + offset, end - offset
