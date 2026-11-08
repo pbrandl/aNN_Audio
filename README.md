@@ -10,8 +10,6 @@ Essentially, the device adds overtones to the signal. The current implementation
 
 The model is implemented in a Jupyter notebook (`WaveNet.ipynb`) and was trained on a GPU in Google Colab. The training data (about 4 GB) is not part of the repository; contact me if you are interested.
 
-**Status:** research project from 2021, presented at the Eastern European Machine Learning Summer School (EEML 2021). The approach has since become common practice: WaveNet-style networks are widely used for real-time modelling of amplifiers and audio effects.
-
 ## Training Data Generation
 
 Training data $x$ is generated in `generateTrainSet.py` as a 16-bit wav. The data used for training is randomly cut and concatenated from MedleyDB -- a dataset of multitrack audio for music research [2]. The obtained audio concatenation was then recorded through an analog harmonic distortion device to obtain the target file $y$ for training. Note, the input $x$ differs from the target file $y$ only by the distortion effect from the device. 
