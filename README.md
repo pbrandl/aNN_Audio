@@ -8,7 +8,9 @@ Essentially, the device adds overtones to the signal. The current implementation
 </p>
 
 
-Due to computational complexity of the project is mostly implemented in as Python notebook in Google Colab (`WaveNet.ipynb`). Due to the large training data set (currently 4 GB) the data is stored in Google Drive. (If interested just contact me.)
+The model is implemented in a Jupyter notebook (`WaveNet.ipynb`) and was trained on a GPU in Google Colab. The training data (about 4 GB) is not part of the repository; contact me if you are interested.
+
+**Status:** research project from 2021, presented at the Eastern European Machine Learning Summer School (EEML 2021). The approach has since become common practice: WaveNet-style networks are widely used for real-time modelling of amplifiers and audio effects, for example in the open-source Neural Amp Modeler.
 
 ## Training Data Generation
 
